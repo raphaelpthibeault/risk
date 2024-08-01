@@ -1,7 +1,0 @@
-.git/
-*.o
-*.out
-*.elf
-*.bin
-build/
-dist/
