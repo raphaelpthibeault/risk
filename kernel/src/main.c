@@ -119,7 +119,7 @@ void _start(void) {
     // Note: we assume the framebuffer model is RGB with 32-bit pixels.
     for (size_t i = 0; i < 100; i++) {
         volatile uint32_t *fb_ptr = framebuffer->address;
-        fb_ptr[i * (framebuffer->pitch / 4) + i] = 0xffffff;
+        fb_ptr[i * (framebuffer->pitch / 4) + i] = 0xff0000; // red: 0xff0000 white: 0xffffff
     }
 
     // We're done, just hang...
