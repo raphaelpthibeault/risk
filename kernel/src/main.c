@@ -5,6 +5,7 @@
 #include <limine.h>
 #include <serial.h>
 #include <log.h>
+#include <asm.h>
 
 // Set the base revision to 2, this is recommended as this is the latest
 // base revision described by the Limine boot protocol specification.
@@ -44,43 +45,65 @@ static volatile LIMINE_REQUESTS_START_MARKER;
 __attribute__((used, section(".requests_end_marker")))
 static volatile LIMINE_REQUESTS_END_MARKER;
 
-
-// Halt and catch fire function.
-static void hcf(void) {
-    for (;;) {
-#if defined (__x86_64__)
-        asm ("hlt");
-#elif defined (__aarch64__) || defined (__riscv)
-        asm ("wfi");
-#endif
-    }
-}
-
-/* initialize the core kernel */
-/* make smp right from the start */
-void 
-_start(void) {
-    // Ensure the bootloader actually understands our base revision (see spec).
+void  
+bootloader_checks(void) {
     if (LIMINE_BASE_REVISION_SUPPORTED == false) {
+        log_("Error: Limine base revision unsupported\n");
         hcf();
     }
 
     if (framebuffer_request.response == NULL || framebuffer_request.response->framebuffer_count < 1 ||
         smp_request.response == NULL ||
         kernel_address_request.response == NULL) {
+        log_("Error: Limine request\n"); 
         hcf();
     }
+}
 
+/* initialize the core kernel
+ * only CPU 0 runs the _start function 
+ */
+void 
+_start(void) {
+    log_("Starting risk\n");
+    bootloader_checks();
+    log_("Bootloader checked\n");
+
+    /* initialize COM1 */
+    init_serial();
+
+    /* disable interrupts */
+    disable_interrupts();
+
+
+
+    /* re-enable interrupts */
+    enable_interrupts();
+
+    /* some logging */
     uint64_t processor_id = smp_request.response->bsp_lapic_id;
     uint64_t kernel_start = kernel_address_request.response->virtual_base;
 
-    init_serial();
-    log_("Main PID: %d\n", processor_id);
-    log_("Kernel Start: %llu\n", kernel_start);
-    // higher half kernel so kernel_start should be 0xFFFFFFFF80000000 = 18446744071562067968
-    int kstart_good = kernel_start == 0xFFFFFFFF80000000;
-    log_("good kstart: %d\n", kstart_good);
+    log_("Main CPU: %d\n", processor_id);
+    uint64_t nb_cpus = smp_request.response->cpu_count;
+    log_("Number of cpus detected: %d\n", nb_cpus);
+    
+    if (kernel_start != 0xFFFFFFFF80000000) {
+        // higher half kernel so kernel_start should be 0xFFFFFFFF80000000 = 18446744071562067968
+        log_("Error: kernel start::= %llu != 0xFFFFFFFF80000000\n", kernel_start);
+    }
 
+    /* booting code for all cpus, put in a smp file/folder. Just do cpu 0 for now
+     * 
+
+    for (uint64_t i = 0; i < nb_cpus; i++) {
+        struct limine_smp_info *cpu_info = smp_request.response->cpus[i];
+        log_("Core %d: With ID: %d\n", i, cpu_info->lapic_id);
+
+    }
+    */
+
+    /* some drawing */
     // Fetch the first framebuffer.
     struct limine_framebuffer *framebuffer = framebuffer_request.response->framebuffers[0];
 
@@ -91,22 +114,7 @@ _start(void) {
         fb_ptr[i * (framebuffer->pitch / 4) + i] = 0xffffff;
     }
 
-    // Log the number of cores detected
-    uint64_t nb_cpus = smp_request.response->cpu_count;
-    log_("Number of cpus detected: %d\n", nb_cpus);
-
-    // init code just for cpu 0 (serial ports etc)
-
-
-    // init code for all cpus
-
-    for (uint64_t i = 0; i < nb_cpus; i++) {
-        struct limine_smp_info *cpu_info = smp_request.response->cpus[i];
-        log_("Core %d: With ID: %d\n", i, cpu_info->lapic_id);
-
-    }
-
     // for now just hang and freeze the emulator
-    // should be a panic
+    // should be a panic, eventually
     hcf();
 }
