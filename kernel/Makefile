@@ -66,6 +66,7 @@ override KCFLAGS += \
 # Internal C preprocessor flags that should not be changed by the user.
 override KCPPFLAGS := \
     -I src \
+    -I include \
     $(KCPPFLAGS) \
     -MMD \
     -MP
@@ -118,9 +119,6 @@ override HEADER_DEPS := $(addprefix obj-$(KARCH)/,$(CFILES:.c=.c.d) $(ASFILES:.S
 .PHONY: all
 all: bin-$(KARCH)/$(KERNEL)
 
-src/limine.h:
-	curl -Lo $@ https://github.com/limine-bootloader/limine/raw/trunk/limine.h
-
 # Link rules for the final kernel executable.
 # The magic printf/dd command is used to force the final ELF file type to ET_DYN.
 # GNU binutils, for silly reasons, forces the ELF type to ET_EXEC even for
@@ -135,7 +133,7 @@ bin-$(KARCH)/$(KERNEL): Makefile linker-$(KARCH).ld $(OBJ)
 -include $(HEADER_DEPS)
 
 # Compilation rules for *.c files.
-obj-$(KARCH)/%.c.o: src/%.c Makefile src/limine.h
+obj-$(KARCH)/%.c.o: src/%.c Makefile
 	mkdir -p "$$(dirname $@)"
 	$(KCC) $(KCFLAGS) $(KCPPFLAGS) -c $< -o $@
 
@@ -156,4 +154,4 @@ clean:
 
 .PHONY: distclean
 distclean:
-	rm -rf bin-* obj-* src/limine.h
+	rm -rf bin-* obj-*

@@ -31,7 +31,7 @@ run-hdd: run-hdd-$(KARCH)
 
 .PHONY: run-x86_64
 run-x86_64: ovmf $(IMAGE_NAME).iso
-	qemu-system-x86_64 -M q35 -m 2G -L ovmf-x86_64/ -cdrom $(IMAGE_NAME).iso -boot d
+	qemu-system-x86_64 -M q35 -m 2G -L ovmf-x86_64/ -cdrom $(IMAGE_NAME).iso -boot d -smp 4 -serial mon:stdio
 
 .PHONY: run-hdd-x86_64
 run-hdd-x86_64: ovmf $(IMAGE_NAME).hdd
@@ -56,6 +56,7 @@ limine/limine:
 	rm -rf limine
 	git clone https://github.com/limine-bootloader/limine.git --branch=v7.x-binary --depth=1
 	$(MAKE) -C limine
+	cp limine/limine.h kernel/include/
 
 .PHONY: kernel
 kernel:
@@ -105,5 +106,5 @@ clean:
 
 .PHONY: distclean
 distclean: clean
-	rm -rf limine ovmf*
+	rm -rf limine ovmf* kernel/include/limine.h
 	$(MAKE) -C kernel distclean
