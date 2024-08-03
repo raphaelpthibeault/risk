@@ -74,6 +74,7 @@ override KCPPFLAGS := \
 ifeq ($(KARCH),x86_64)
     # Internal nasm flags that should not be changed by the user.
     override KNASMFLAGS += \
+        -I src/ \
         -Wall
 endif
 
@@ -112,6 +113,7 @@ override KLDFLAGS += \
 override CFILES := $(shell cd src && find -L * -type f -name '*.c')
 override ASFILES := $(shell cd src && find -L * -type f -name '*.S')
 override NASMFILES := $(shell cd src && find -L * -type f -name '*.asm')
+override INCFILES := $(shell cd src && find -L * -type f -name '*.inc')
 override OBJ := $(addprefix obj-$(KARCH)/,$(CFILES:.c=.c.o) $(ASFILES:.S=.S.o) $(NASMFILES:.asm=.asm.o))
 override HEADER_DEPS := $(addprefix obj-$(KARCH)/,$(CFILES:.c=.c.d) $(ASFILES:.S=.S.d))
 
@@ -131,6 +133,8 @@ bin-$(KARCH)/$(KERNEL): Makefile linker-$(KARCH).ld $(OBJ)
 
 # Include header dependencies.
 -include $(HEADER_DEPS)
+# Include NASM file dependencies
+-include $(addsuffix .d,$(basename $(NASMFILES)))
 
 # Compilation rules for *.c files.
 obj-$(KARCH)/%.c.o: src/%.c Makefile
@@ -145,7 +149,7 @@ obj-$(KARCH)/%.S.o: src/%.S Makefile
 # Compilation rules for *.asm (nasm) files.
 obj-$(KARCH)/%.asm.o: src/%.asm Makefile
 	mkdir -p "$$(dirname $@)"
-	nasm $(KNASMFLAGS) $< -o $@
+	nasm $(KNASMFLAGS) -MD $@.d $< -o $@
 
 # Remove object files and the final executable.
 .PHONY: clean
