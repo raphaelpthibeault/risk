@@ -100,3 +100,6 @@ void gdt_set_tss(gdt_block_t *, size_t);
  * */
 void gdt_load(gdt_descriptor_t *);
 
+void gdt_set_tss_ist(gdt_block_t *, size_t, void *);
+void gdt_set_tss_ring(gdt_block_t *, size_t, void *);
+

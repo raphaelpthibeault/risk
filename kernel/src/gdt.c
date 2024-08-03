@@ -45,4 +45,19 @@ gdt_set_tss(gdt_block_t *gdtb, size_t gdt_index) {
     };
 }
 
+void 
+gdt_set_tss_ist(gdt_block_t *gdtb, size_t ist_nb, void *stack) {
+    size_t tss_index = 0;
+    tss_entry_t *tss = (tss_entry_t *)(gdtb->tss + tss_index);
+    tss->ist[(ist_nb - 1) * 2 + 0] = (uint32_t)(uint64_t)stack;
+    tss->ist[(ist_nb - 1) * 2 + 1] = (uint32_t)((uint64_t)stack >> 32);
+}
+
+void 
+gdt_set_tss_ring(gdt_block_t *gdtb, size_t ring_nb, void *stack) {
+    	size_t tss_index = 0;
+	tss_entry_t *tss = (tss_entry_t*)(gdtb->tss + tss_index);
+	tss->rsp[ring_nb * 2 + 0] = (uint32_t)(uint64_t)stack;
+	tss->rsp[ring_nb * 2 + 1] = (uint32_t)((uint64_t)stack >> 32);
+}
 
