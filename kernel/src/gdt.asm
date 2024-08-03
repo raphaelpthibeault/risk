@@ -5,7 +5,7 @@ GLOBAL      gdt_load
 ; convetion: rdi should contain the gdt descriptor
 gdt_load: 
     ; setup GDT
-    ; interrupts should already be disabled
+    cli
     lgdt    [rdi]           ; load global descriptor table
     ; setup TSS
     mov     ax, OFFSET_TSS_SEG
