@@ -1,9 +1,9 @@
 %include    "gdt.inc"
 
 SECTION     .text
-GLOBAL      load_gdt
+GLOBAL      gdt_load
 ; convetion: rdi should contain the gdt descriptor
-load_gdt: 
+gdt_load: 
     ; setup GDT
     ; interrupts should already be disabled
     lgdt    [rdi]           ; load global descriptor table

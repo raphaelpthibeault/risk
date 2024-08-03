@@ -90,13 +90,13 @@ void gdt_init(gdt_block_t *);
 
 /* sets the gdt_block at index with an access and a flag
  * */
-void set_gdt_entry(gdt_block_t *, size_t, enum gdt_access, enum gdt_flags);
+void gdt_set_entry(gdt_block_t *, size_t, enum gdt_access, enum gdt_flags);
 
 /* set up a new task state segment at specified index
  */
-void set_gdt_tss(gdt_block_t *, size_t);
+void gdt_set_tss(gdt_block_t *, size_t);
 
 /* load the gdt descriped by the gdt_descriptor
  * */
-void load_gdt(gdt_descriptor_t *);
+void gdt_load(gdt_descriptor_t *);
 
