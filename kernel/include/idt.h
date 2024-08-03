@@ -20,7 +20,7 @@ enum idt_gate_type {
 	IDT_GATE_TYPE_TASK		= 0b0101,
 };
 
-typedef struct s_idt_entry {
+typedef struct {
     uint16_t offset_lo;     /* offset 0-15 */ 
     uint16_t selector;      /* code segment selector in GDT or LDT */
     uint8_t ist;            /* bits 0-2 hold Interrupt Stack Table, remainding bits are 0 */ 
@@ -30,12 +30,12 @@ typedef struct s_idt_entry {
     uint32_t zero;          /* reserved */
 } PACKED idt_entry_t;
 
-typedef struct s_idt_descriptor {
+typedef struct {
     uint16_t limit; /* size */ 
     idt_entry_t *base; /* offset */
 } PACKED idt_descriptor_t;
 
-typedef struct s_idt_block {
+typedef struct {
     idt_descriptor_t idtd;
     idt_entry_t idt[IDT_SIZE];
 } idt_block_t;

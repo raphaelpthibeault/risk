@@ -25,7 +25,7 @@
 #define OFFSET_TSS_SEG              0x28
 
 /* GDT ENTRY */
-typedef struct s_gdt_entry {
+typedef struct {
     uint16_t limit_lo;      /* limit 0-15 */
     uint16_t base_lo;       /* base 0-15 */
     uint8_t base_mid;       /* base 16-23 */
@@ -37,7 +37,7 @@ typedef struct s_gdt_entry {
 /* The GDT is pointed to by the value in the GDTR register.
  * This is loaded using the LGDT assembly instruction (gdt.asm), whose argument is a pointer to a GDT Descriptor structure (this definition)
  */
-typedef struct s_gdt_descriptor {
+typedef struct {
     uint16_t size;          /* the size of the table in bytes subtracted by 1. This subtraction occurs because the maximum value of Size is 65535, while the GDT can be up to 65536 bytes in length (8192 entries). Further, no GDT can have a size of 0 bytes */
     gdt_entry_t *offset;    /* the linear address of the GDT (not the physical address, paging applies) */
 } PACKED gdt_descriptor_t;
@@ -55,7 +55,7 @@ enum gdt_flags {
 	GDT_FLAG_PAGE_GRANULARITY	= 0b10000000,
 };
 
-typedef struct s_tss_entry {
+typedef struct {
 	uint32_t	reserved0;
 	uint32_t	rsp[3 * 2];		// ring stacks
 	uint32_t	reserved1[2];
@@ -65,7 +65,7 @@ typedef struct s_tss_entry {
 	uint16_t	io_map_base;
 } PACKED tss_entry_t;
 
-typedef struct s_tss_descriptor {
+typedef struct {
     uint16_t	limit_lo;	// Segment limit 0-15
 	uint16_t	base_lo;	// Base 0-15
 	uint8_t		base_mid;	// Base 16-23
@@ -77,7 +77,7 @@ typedef struct s_tss_descriptor {
 } PACKED tss_descriptor_t;
 
 /* struct to hold the gdt at runtime */
-typedef struct s_gdt_block {
+typedef struct {
     gdt_descriptor_t gdtd;
     gdt_entry_t gdt[GDT_NUM];
     tss_entry_t tss[GDT_TSS_NUM];
