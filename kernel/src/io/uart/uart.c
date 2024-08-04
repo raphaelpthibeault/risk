@@ -2,10 +2,9 @@
 #include <stdbool.h>
 #include <stdint.h>
 
-static uint16_t input_port; // going to write an input eventually, but I think I need apic to truly write something that works 
-static uint16_t output_port;
-
-static uint8_t available_com_ports[8] = {
+static uint16_t _input_port; // going to write an input eventually, but I think I need apic to truly write something that works 
+static uint16_t _output_port;
+static uint8_t _available_com_ports[8] = {
     0x00,
     0x00,
     0x00,
@@ -16,24 +15,12 @@ static uint8_t available_com_ports[8] = {
     0x00
 };
 
-uint16_t __com_port_addrs[9] = {
-    0,
-    SERIAL_COM1_PORT,
-    SERIAL_COM2_PORT,
-    SERIAL_COM3_PORT,
-    SERIAL_COM4_PORT,
-    SERIAL_COM5_PORT,
-    SERIAL_COM6_PORT,
-    SERIAL_COM7_PORT,
-    SERIAL_COM8_PORT
-};
-
 static void 
 serial_select_input_port(uint16_t port) {
     if (port == 0 || port > 8)
         return;
 
-    input_port = port;
+    _input_port = port;
 }
 
 static void 
@@ -41,7 +28,7 @@ serial_select_output_port(uint16_t port) {
     if (port == 0 || port > 8) 
         return;
 
-    output_port = port;
+    _output_port = port;
 }
 
 bool 
@@ -71,30 +58,30 @@ serial_configure_port(uint16_t port) {
 
 bool 
 serial_shell_enable() {
-    input_port = 0;
-    output_port = 0;
+    _input_port = 0;
+    _output_port = 0;
     uint16_t i;
 
     for (i = 1; i < 9; ++i) {
         if (serial_check_port(i)) {
-            available_com_ports[i] = true;
+            _available_com_ports[i] = true;
             serial_configure_port(i);
         }
     }
     for (i = 1; i < 9; ++i) {
-        if (available_com_ports[i]) {
+        if (_available_com_ports[i]) {
             serial_select_output_port(i);
             break;
         }
     }
     for (i = 1; i < 3; ++i) { // curiously only COM1 and COM2 seem to work as input ports
-        if (available_com_ports[i]) {
+        if (_available_com_ports[i]) {
             serial_select_input_port(i);
             break;
         }
     }
 
-    return input_port != 0 && output_port != 0;
+    return _input_port != 0 && _output_port != 0;
 }
 
 
@@ -128,6 +115,4 @@ serial_write_str(const char *str, uint16_t port) {
         serial_write(*str++, port);
     }
 }
-
-
 
