@@ -2,10 +2,10 @@
 #include <stddef.h>
 #include <stdbool.h>
 #include <stdarg.h>
-#include <limine.h>
-#include <serial.h>
-#include <log.h>
-#include <asm.h>
+#include <boot/limine/limine.h>
+#include <io/serial/serial.h>
+#include <lib/log.h>
+#include <lib/asm.h>
 
 // Set the base revision to 2, this is recommended as this is the latest
 // base revision described by the Limine boot protocol specification.
@@ -45,7 +45,7 @@ static volatile LIMINE_REQUESTS_START_MARKER;
 __attribute__((used, section(".requests_end_marker")))
 static volatile LIMINE_REQUESTS_END_MARKER;
 
-void  
+void
 bootloader_checks(void) {
     if (LIMINE_BASE_REVISION_SUPPORTED == false) {
         log_("Error: Limine base revision unsupported\n");
@@ -55,15 +55,15 @@ bootloader_checks(void) {
     if (framebuffer_request.response == NULL || framebuffer_request.response->framebuffer_count < 1 ||
         smp_request.response == NULL ||
         kernel_address_request.response == NULL) {
-        log_("Error: Limine request\n"); 
+        log_("Error: Limine request\n");
         hcf();
     }
 }
 
 /* initialize the core kernel
- * only CPU 0 runs the _start function 
+ * only CPU 0 runs the _start function
  */
-void 
+void
 _start(void) {
     log_("Starting risk\n");
     bootloader_checks();
@@ -74,6 +74,16 @@ _start(void) {
 
     /* disable interrupts */
     disable_interrupts();
+
+    //kernel_address_request.response->virtual_base
+
+    //kernel_address_request.response->physical_base
+
+    uint64_t physical_base = kernel_address_request.response->physical_base;
+    uint64_t virtual_base = kernel_address_request.response->virtual_base;
+    log_("Physical base: %llu\n", physical_base);
+    log_("Virtual base: %llu\n", virtual_base);
+
 
 
 
@@ -87,14 +97,14 @@ _start(void) {
     log_("Main CPU: %d\n", processor_id);
     uint64_t nb_cpus = smp_request.response->cpu_count;
     log_("Number of cpus detected: %d\n", nb_cpus);
-    
+
     if (kernel_start != 0xFFFFFFFF80000000) {
         // higher half kernel so kernel_start should be 0xFFFFFFFF80000000 = 18446744071562067968
         log_("Error: kernel start::= %llu != 0xFFFFFFFF80000000\n", kernel_start);
     }
 
     /* booting code for all cpus, put in a smp file/folder. Just do cpu 0 for now
-     * 
+     *
 
     for (uint64_t i = 0; i < nb_cpus; i++) {
         struct limine_smp_info *cpu_info = smp_request.response->cpus[i];

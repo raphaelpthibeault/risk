@@ -1,6 +1,6 @@
-#include <log.h>
+#include "log.h"
 
-void 
+void
 log_(const char *format, ...) {
     va_list args;
     va_start(args, format);
@@ -12,4 +12,3 @@ log_(const char *format, ...) {
 
     va_end(args);
 }
-
