@@ -77,6 +77,7 @@ override HEADER_DEPS := $(addprefix obj/,$(CFILES:.c=.c.d) $(ASFILES:.s=.s.d))
 all: bin/$(KERNEL)
 
 src/boot/limine/limine.h:
+	mkdir -p src/boot/limine
 	curl -Lo $@ https://github.com/limine-bootloader/limine/raw/trunk/limine.h
 
 # Link rules for the final kernel executable.

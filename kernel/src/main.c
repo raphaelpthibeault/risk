@@ -1,4 +1,3 @@
-#include <cpu/gdt/gdt.h>
 #include "macros.h"
 #include <boot/protocol.h>
 #include <mm/pmm/pmm.h>
@@ -11,44 +10,48 @@
 #include <lib/std/printf.h>
 #include <lib/std/memset.h>
 
-__attribute__((used, section(".requests")))
+#define LIMINE_REQUEST __attribute__((used, section(".requests")))
+
+
+LIMINE_REQUEST
 static volatile LIMINE_BASE_REVISION(2);
 
-__attribute__((used, section(".requests")))
+LIMINE_REQUEST
 static volatile struct limine_framebuffer_request framebuffer_request = {
     .id = LIMINE_FRAMEBUFFER_REQUEST,
     .revision = 0
 };
 
-__attribute__((used, section(".requests")))
+LIMINE_REQUEST
 static volatile struct limine_smp_request smp_request = {
     .id = LIMINE_SMP_REQUEST,
     .revision = 0
 };
 
-__attribute__((used, section(".requests")))
+LIMINE_REQUEST
 static volatile struct limine_kernel_address_request kernel_address_request = {
     .id = LIMINE_KERNEL_ADDRESS_REQUEST,
     .revision = 0
 };
 
-__attribute__((used, section(".requests")))
+LIMINE_REQUEST
 static volatile struct limine_memmap_request memmap_request = {
     .id = LIMINE_MEMMAP_REQUEST,
     .revision = 0,
 };
 
-__attribute__((used, section(".requests")))
+LIMINE_REQUEST
 static volatile struct limine_module_request module_request = {
     .id = LIMINE_MODULE_REQUEST,
     .revision = 0,
 };
 
-__attribute__((used, section(".requests")))
+LIMINE_REQUEST
 static volatile struct limine_rsdp_request rsdp_request = {
     .id = LIMINE_RSDP_REQUEST,
     .revision = 0,
 };
+
 
 /*
 __attribute__((used, section(".limine_requests")))
@@ -342,11 +345,6 @@ _start(void) {
     /* recall only the BSP runs this _start function */
     cli();
     /* gdt */ 
-    printf("[debug] gdt_assemble BEGIN\r\n");
-    gdt_assemble();
-    __uart_gdt_dump(); 
-    printf("[debug] gdt_assemble END\r\n");
-
     /* idt */ 
     // sti();
 
