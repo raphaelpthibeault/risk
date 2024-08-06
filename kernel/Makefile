@@ -69,14 +69,14 @@ override KNASMFLAGS += \
 override CFILES := $(shell cd src && find -L * -type f -name '*.c')
 override ASFILES := $(shell cd src && find -L * -type f -name '*.s')
 override NASMFILES := $(shell cd src && find -L * -type f -name '*.asm')
-override OBJ := $(addprefix obj/,$(CFILES:.c=.c.o) $(ASFILES:.S=.S.o) $(NASMFILES:.asm=.asm.o))
-override HEADER_DEPS := $(addprefix obj/,$(CFILES:.c=.c.d) $(ASFILES:.S=.S.d))
+override OBJ := $(addprefix obj/,$(CFILES:.c=.c.o) $(ASFILES:.s=.s.o) $(NASMFILES:.asm=.asm.o))
+override HEADER_DEPS := $(addprefix obj/,$(CFILES:.c=.c.d) $(ASFILES:.s=.s.d))
 
 # Default target.
 .PHONY: all
 all: bin/$(KERNEL)
 
-src/boot/limine.h:
+src/boot/limine/limine.h:
 	curl -Lo $@ https://github.com/limine-bootloader/limine/raw/trunk/limine.h
 
 # Link rules for the final kernel executable.
@@ -92,15 +92,11 @@ bin/$(KERNEL): Makefile linker.ld $(OBJ)
 # Include header dependencies.
 -include $(HEADER_DEPS)
 
-obj/%.c.o: src/%.c Makefile src/boot/limine.h
+obj/%.c.o: src/%.c Makefile src/boot/limine/limine.h
 	mkdir -p "$$(dirname $@)"
 	$(KCC) $(KCFLAGS) $(KCPPFLAGS) -c $< -o $@
 
 obj/%.s.o: src/%.s Makefile
-	mkdir -p "$$(dirname $@)"
-	$(KCC) $(KCFLAGS) $(KCPPFLAGS) -c $< -o $@
-
-obj/%.asm.o: src/%.asm Makefile
 	mkdir -p "$$(dirname $@)"
 	nasm $(KNASMFLAGS) $< -o $@
 
@@ -110,4 +106,4 @@ clean:
 
 .PHONY: distclean
 distclean: clean
-	rm -f src/boot/limine.h
+	rm -f src/boot/limine/limine.h

@@ -31,21 +31,17 @@ SECTIONS
         *(.text .text.*)
     } :text
 
-    /* Move to the next memory page for .rodata */
-    . = ALIGN(CONSTANT(MAXPAGESIZE));
+    . = ALIGN(0x1000);
 
     .rodata : {
         *(.rodata .rodata.*)
     } :rodata
 
-    /* Move to the next memory page for .data */
-    . = ALIGN(CONSTANT(MAXPAGESIZE));
+    . = ALIGN(0x1000);
 
     .data : {
         *(.data .data.*)
 
-        /* Place the sections that contain the Limine requests as part of the .data */
-        /* output section. */
         KEEP(*(.requests_start_marker))
         KEEP(*(.requests))
         KEEP(*(.requests_end_marker))
@@ -56,14 +52,18 @@ SECTIONS
         *(.dynamic)
     } :data :dynamic
 
+    . = ALIGN(0x1000);
+
     /* NOTE: .bss needs to be the last thing mapped to :data, otherwise lots of */
     /* unnecessary zeros will be written to the binary. */
     /* If you need, for example, .init_array and .fini_array, those should be placed */
     /* above this. */
-    .bss : {
+    .bss : ALIGN(0x1000) {
         *(.bss .bss.*)
         *(COMMON)
     } :data
+
+    . = ALIGN(0x1000);
 
     /* Discard .note.* and .eh_frame* since they may cause issues on some hosts. */
     /* Also discard the program interpreter section since we do not need one. This is */
@@ -74,4 +74,6 @@ SECTIONS
         *(.note .note.*)
         *(.interp)
     }
+
+    . = ALIGN(0x1000);
 }
