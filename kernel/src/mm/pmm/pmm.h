@@ -1,52 +1,87 @@
 #pragma once 
+#include <boot/limine/limine.h>
+#include <stdbool.h>
 
-#include <stdint.h>
-#include <stddef.h>
-#include <boot/protocol.h>
+typedef struct {
+    uint64_t base;
+    uint64_t length;
+} memory_range_t;
 
-#define PMM_SECTION_USED    0
-#define PMM_SECTION_FREE    1
-#define PMM_SECTION_BAD     2
-
-#define MAX_PMM_HEADER_PROPORTION   64
-// should use about 1 MiB of memory for 64 MiB of memory under max load
-
-static 
 inline 
-char *
-memtype_to_str(uint64_t t) {
-    switch (t) {
-        case MEMORY_MAP_FREE: return "free";
-        case MEMORY_MAP_BUSY: return "used";
-        case MEMORY_MAP_MMIO: return "mmio";
-        case MEMORY_MAP_NOUSE: return "bad";
-        default: return "unidentifiable";
-    }
+memory_range_t
+range_div(memory_range_t range, uint64_t val) {
+    return (memory_range_t){ .base = range.base / val, .length = range.length / val};
 }
 
-typedef struct s_pmm_section {
-    struct s_pmm_section *prev;
-    struct s_pmm_section *next;
-    uint64_t start;
-    uint64_t pages;
-    uint64_t free;
-} pmm_section_t;
+typedef struct {
+    uint8_t *data;
+    uint64_t length;
+} bitmap_t;
 
-typedef struct s_pmm_pool {
-    struct s_pmm_pool *next;
-    uint64_t pages;
-    uint64_t base;
-} pmm_pool_t;
+#define RESULT(ERROR, OK)   \
+    struct {                \
+        bool success;       \
+        union {             \
+            ERROR err;      \
+            OK ok;          \
+        };                  \
+    }                       
 
-void *pmm_alloc_page(void);
-void  pmm_free_page(void* page);
-void *pmm_alloc_pool(size_t page_count);
-void *pmm_realloc_pool(void* pool, size_t page_count);
-void  pmm_free_pool(void* pool);
-void  pmm_lock_page(void* page);
-void  pmm_unlock_page(void* page);
-void  pmm_lock_pages(void* page, size_t count);
-void  pmm_unlock_pages(void* page, size_t count);
+#define OK(T, VALUE)        \
+    (T) {                   \
+        .success = true,    \
+        .ok = VALUE         \
+    }
 
-uint64_t pmm_get_free_memory();
+#define ERR(T, ERROR)       \
+    (T) {                   \
+        .success = false,   \
+        .ok = ERROR         \
+    }
+
+
+/* (should be) all syscall results */
+#define FOREACH_RESULTS(RESULT) \
+    RESULT(SUCCESS)             \
+    RESULT(INTERRUPTED)         \
+    RESULT(TIMEOUT)             \
+    RESULT(ALREADY_BINDED)      \
+    RESULT(ALREADY_ACK)         \
+    RESULT(NOT_BINDED)          \
+    RESULT(NOT_PERMITTED)       \
+    RESULT(BAD_ADDRESS)         \
+    RESULT(BAD_ARGUMENTS)       \
+    RESULT(BAD_HANDLE)          \
+    RESULT(BAD_ID)              \
+    RESULT(BAD_SYSCALL)         \
+    RESULT(NOT_IMPLEMENTED)     \
+    RESULT(OUT_OF_MEMORY)       \
+    RESULT(CHANNEL_FULL)        \
+    RESULT(CHANNEL_EMPTY)       \
+    RESULT(WOULD_BLOCK)
+
+
+typedef enum {
+#define ITER(result) RISK_##result,
+    FOREACH_RESULTS(ITER)
+#undef ITER 
+
+    RISK_RESULT_COUNT
+} risk_result_t;
+
+typedef RESULT(risk_result_t, memory_range_t) PMM_RESULT;
+
+#define PMM_USED true 
+#define PMM_UNUSED false
+#define BITMAP_SCALE 8 /* bit per byte */
+
+void pmm_init(struct limine_memmap_response const *handover);
+
+void pmm_bitmap_init(struct limine_memmap_response const *memory_map);
+
+void pmm_mmap_load(struct limine_memmap_response const*memory_map);
+
+PMM_RESULT pmm_unused(memory_range_t);
+
+PMM_RESULT pmm_used(memory_range_t);
 

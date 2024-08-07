@@ -1,6 +1,6 @@
 /* Tell the linker that we want an x86_64 ELF64 output file */
 OUTPUT_FORMAT(elf64-x86-64)
-OUTPUT_ARCH(i386:x86-64)
+OUTPUT_ARCH(i686:x86-64)
 
 /* We want the symbol _start to be our entry point */
 ENTRY(_start)
@@ -31,17 +31,21 @@ SECTIONS
         *(.text .text.*)
     } :text
 
-    . = ALIGN(0x1000);
+    /* Move to the next memory page for .rodata */
+    . = ALIGN(CONSTANT(MAXPAGESIZE));
 
     .rodata : {
         *(.rodata .rodata.*)
     } :rodata
 
-    . = ALIGN(0x1000);
+    /* Move to the next memory page for .data */
+    . = ALIGN(CONSTANT(MAXPAGESIZE));
 
     .data : {
         *(.data .data.*)
 
+        /* Place the sections that contain the Limine requests as part of the .data */
+        /* output section. */
         KEEP(*(.requests_start_marker))
         KEEP(*(.requests))
         KEEP(*(.requests_end_marker))
@@ -52,18 +56,14 @@ SECTIONS
         *(.dynamic)
     } :data :dynamic
 
-    . = ALIGN(0x1000);
-
     /* NOTE: .bss needs to be the last thing mapped to :data, otherwise lots of */
     /* unnecessary zeros will be written to the binary. */
     /* If you need, for example, .init_array and .fini_array, those should be placed */
     /* above this. */
-    .bss : ALIGN(0x1000) {
+    .bss : {
         *(.bss .bss.*)
         *(COMMON)
     } :data
-
-    . = ALIGN(0x1000);
 
     /* Discard .note.* and .eh_frame* since they may cause issues on some hosts. */
     /* Also discard the program interpreter section since we do not need one. This is */
@@ -74,6 +74,5 @@ SECTIONS
         *(.note .note.*)
         *(.interp)
     }
-
-    . = ALIGN(0x1000);
 }
+

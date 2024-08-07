@@ -15,7 +15,7 @@ endef
 override DEFAULT_KCC := clang-18
 $(eval $(call DEFAULT_VAR,KCC,$(DEFAULT_KCC)))
 
-override DEFAULT_KLD := ld
+override DEFAULT_KLD := ld.lld
 $(eval $(call DEFAULT_VAR,KLD,$(DEFAULT_KLD)))
 
 override DEFAULT_KCFLAGS := -g -O2 -pipe
