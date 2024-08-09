@@ -7,12 +7,14 @@
 
 enum {
     IDT_TRAP = 0xef,
-    IDT_USER = 0x60,
+    IDT_USER = 0x60, // task
     IDT_GATE = 0x8e
 };
 
+/* see Section 6.14: Exception and Interrupt Handling in 64-bit Mode of the Intel Software Developer Manual, Volume 3-A */
+
 typedef struct {
-    uint16_t    offset_0_16;
+    uint16_t    offset_0_15;
     uint16_t    code_segment;
     uint8_t     ist;
     uint8_t     attributes;

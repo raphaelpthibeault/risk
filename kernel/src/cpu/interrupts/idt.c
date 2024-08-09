@@ -17,7 +17,7 @@ idt_create_entry(uintptr_t handler, uint8_t ist, uint8_t idt_flags) {
     return (idt_entry_t) {
         .attributes = idt_flags,
         .ist = ist,
-        .offset_0_16 = handler,
+        .offset_0_15 = handler,
         .offset_16_32 = (handler >> 16),
         .offset_32_63 = (handler >> 32),
         .code_segment = GDT_KERNEL_CODE * GDT_DESCRIPTOR_SIZE,

@@ -1,11 +1,11 @@
 #include "interrupts.h"
-#include "apic/apic.h"
+#include <apic/apic.h>
 #include <stdint.h>
 #include <cpu/cpu.h>
 #include <lib/asm/asm.h>
 #include <lib/std/printf.h>
 
-/* private stackframe structure so I can have a backtrace */
+/* private stackframe structure per Section 6.14.2: 64-Bit Mode Stack Frame of the Intel Software Developer Manual, Volume 3-A */
 typedef struct s_stackframe {
     struct s_stackframe *rbp;
     uint64_t rip;
@@ -14,7 +14,12 @@ typedef struct s_stackframe {
 static void registers_dump(registers_t const *regs);
 static uint64_t backtrace_dump(uintptr_t rbp);
 
+/* see Section 6.15: Exception and Interrupt Reference of the Intel Software Developer Manual, Volume 3-A
+ * Interrupts 0-21 are per Intel 
+ * the rest are user defined
+ * */
 static char *_error_messages[32] = {
+    /* Intel defined */
     "DivisionByZero",
     "Debug",
     "NonMaskableInterrupt",
@@ -37,6 +42,7 @@ static char *_error_messages[32] = {
     "SIMD Floating-Point Exception",
     "Virtualization Exception",
     "Control Protection Exception",
+    /* user defined */
     "Reserved",
     "Hypervisor Injection Exception",
     "VMM Communication Exception",
