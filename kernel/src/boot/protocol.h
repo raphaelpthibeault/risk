@@ -27,6 +27,22 @@
     (MEMORY_IS_ADDR_PAGE_ALIGNED((RANGE).base) && \
      MEMORY_IS_SIZE_PAGE_ALIGNED((RANGE).length))
 
+typedef struct {
+    uint64_t base;
+    uint64_t length;
+} memory_range_t;
+
+inline 
+memory_range_t
+range_div(memory_range_t range, uint64_t val) {
+    return (memory_range_t){ .base = range.base / val, .length = range.length / val};
+}
+
+inline 
+memory_range_t 
+range_mul(memory_range_t range, uint64_t val) {
+    return (memory_range_t){ .base = range.base * val, .length = range.length * val};
+}
 
 typedef struct {
     uint32_t    frame_width;

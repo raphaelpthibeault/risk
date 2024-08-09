@@ -1,4 +1,5 @@
 #include "pmm.h"
+#include "lib/eh/eh.h"
 
 #include <macros.h>
 #include <boot/protocol.h>
@@ -10,15 +11,7 @@
 #include <lib/std/memset.h>
 #include <lib/sync/lock.h>
 #include <lib/asm/asm.h>
-
-/* 
- * idea: create my own memory map and put it in the first usable entry
- *       with the limine_responses_parse algorithm of commit 
- *       d8aa45e8dc0470d528183ad848c74cc03d18b61f that I've since removed
- * reason: using limine structs everywhere is annoying and looks ugly
- * */
-
-
+#include <mm/mmap.h>
 
 static bitmap_t _bitmap = {};
 static memory_range_t _usable_range = {};
@@ -32,11 +25,12 @@ static bool range_collision(uint64_t,uint64_t,uint64_t,uint64_t);
 static void bitmap_init(bitmap_t*,void*,uint64_t);
 static void bitmap_fill(bitmap_t*,bool);
 static uint64_t bitmap_set_range(bitmap_t*,memory_range_t,bool);
-static inline bool bitmap_get(bitmap_t*,uint64_t);
-static inline void bitmap_set(bitmap_t*,uint64_t,bool);
-static uint64_t map_paddr_to_vaddr(uint64_t);
-static uint64_t map_vaddr_to_paddr(uintptr_t);
+static bool bitmap_get(bitmap_t const *,uint64_t);
+static void bitmap_set(bitmap_t*,uint64_t,bool);
+static memory_range_t bitmap_find_free(bitmap_t const *,uint64_t,uint64_t,bool); 
+static inline uint64_t bitmap_length(uint64_t);
 static memory_range_t addr_to_pages(memory_range_t);
+static memory_range_t pages_to_addr(memory_range_t);
 
 /* initialize physical memory management with the bootloader's handover memory map 
  * note: the bootloader has already made the memory switch to virtual memory
@@ -159,6 +153,54 @@ pmm_used(memory_range_t range) {
     return OK(PMM_RESULT, range);
 }
 
+PMM_RESULT 
+pmm_alloc(uint64_t length, bool upper) {
+    lock_acquire(&_lock); 
+    printf("[info] pmm_alloc(%llu, %d)\r\n", length, upper);
+    
+    bool is_mem_aligned = MEMORY_IS_SIZE_PAGE_ALIGNED(length);
+    printf("[info] is_mem_aligned: %d\r\n", is_mem_aligned);
+    if (!is_mem_aligned) {
+        printf("[error] pmm_alloc() memory is not page aligned!\r\n");
+        hcf();
+    }
+
+    uint64_t page_count = length / MEMORY_PAGE_SIZE;
+    /* use the best guess variables as a way to traverse memory, once we reach the end of memory we reset the guess variable(s) 
+     * and start traversing memory from the start again
+     * */
+    memory_range_t page_range = bitmap_find_free(&_bitmap, upper ? _upper_best_guess : _lower_best_guess, page_count, upper);
+
+    if (page_range.length == 0) { // couldn't find any free memory (starting from best guess
+        if (upper) {
+            _upper_best_guess = -1;
+        } else {
+            _lower_best_guess = 0;
+        }
+        // try again from the start
+        page_range = bitmap_find_free(&_bitmap, upper ? _upper_best_guess : _lower_best_guess, page_count, upper);
+    }
+
+    if (page_range.length <= 0) {
+        printf("[error] pmm_alloc() out of memory!\r\n");
+        return ERR(PMM_RESULT, RISK_OUT_OF_MEMORY);
+    }
+
+    if (upper) {
+        _upper_best_guess = page_range.base;
+    } else {
+        _lower_best_guess = page_range.base + page_range.length;
+    }
+
+    bitmap_set_range(&_bitmap, page_range, PMM_USED);
+
+    memory_range_t pmm_range = pages_to_addr(page_range);
+    _used_memory += pmm_range.length;
+
+    lock_release(&_lock);
+    return OK(PMM_RESULT, pmm_range);
+}
+
 /************************************************ privates ************************************************/
 
 static 
@@ -212,16 +254,14 @@ bitmap_set_range(bitmap_t *bmap, memory_range_t range, bool value) {
 }
 
 static
-inline
 bool 
-bitmap_get(bitmap_t *bmap, uint64_t i) {
+bitmap_get(bitmap_t const *bmap, uint64_t i) {
     uint64_t const byte_index = i / BITMAP_SCALE;
     uint64_t const bit_index = i % BITMAP_SCALE;
     return bmap->data[byte_index] & (1 << bit_index);
 }
 
 static
-inline 
 void 
 bitmap_set(bitmap_t *bmap, uint64_t i, bool val) {
     uint64_t const byte_index = i / BITMAP_SCALE;
@@ -233,16 +273,48 @@ bitmap_set(bitmap_t *bmap, uint64_t i, bool val) {
     }
 }
 
-static
-uint64_t 
-map_paddr_to_vaddr(uint64_t paddr) {
-    return paddr + 0xFFFF800000000000;
+static 
+memory_range_t 
+bitmap_find_free(bitmap_t const *bmap, uint64_t start, uint64_t length, bool upper) {
+    uint64_t bmaplen = bitmap_length(bmap->length);
+
+    if (bmaplen < 1) {
+        printf("[error] bitmap length of < 1 in bitmap_find_free()\r\n");
+        hcf();
+    }
+
+    if (bmaplen < start) {
+        start = bmaplen; 
+    }
+
+    uint64_t range_start = 0;
+    uint64_t range_length = 0;
+    uint64_t i;
+
+    for (i = start; upper ? i > 0 : i < bmaplen; upper ? --i : ++i) {
+        if (bitmap_get(bmap, i) == 0) {
+            if (range_length == 0 || upper) {
+                range_start = i;
+            }
+            ++range_length;
+        } else {
+            range_start = 0;
+            range_length = 0;
+        }
+
+        if (length == range_length) {
+            return (memory_range_t){range_start, range_length};
+        }
+    }
+
+    return (memory_range_t){};
 }
 
 static 
+inline
 uint64_t 
-map_vaddr_to_paddr(uintptr_t vaddr) {
-    return vaddr - 0xFFFF800000000000;
+bitmap_length(uint64_t length) {
+    return length * BITMAP_SCALE;
 }
 
 static 
@@ -250,6 +322,14 @@ memory_range_t
 addr_to_pages(memory_range_t range) {
     range.base -= _usable_range.base;
     range = range_div(range, MEMORY_PAGE_SIZE);
+    return range;
+}
+
+static 
+memory_range_t 
+pages_to_addr(memory_range_t range) {
+    range = range_mul(range, MEMORY_PAGE_SIZE);
+    range.base += _usable_range.base;
     return range;
 }
 
