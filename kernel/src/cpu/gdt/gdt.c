@@ -68,7 +68,7 @@ gdt_assemble(void) {
 
     _gdt.tss = gdt_create_tss_entry((uintptr_t)&_tss);
 
-    printf("[info] reloading gdt... %llu \r\n", (uintptr_t)&_gdt);
+    printf("[info] reloading gdt...\r\n");
     _gdtr.size = GDT_DESCRIPTOR_COUNT * sizeof(gdt_segment_descriptor_t) - 1;
     _gdtr.offset = _gdt.entries;
 

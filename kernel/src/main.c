@@ -1,3 +1,4 @@
+#include "cpu/interrupts/idt.h"
 #include <macros.h>
 #include <boot/protocol.h>
 #include <stdint.h>
@@ -197,6 +198,7 @@ _start(void) {
 
     gdt_assemble();
     gdt_dump();
+    idt_assemble();
     
 
 

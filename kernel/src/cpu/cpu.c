@@ -1,11 +1,11 @@
 #include "cpu.h"
+#include <lib/asm/asm.h>
 #include <stddef.h>
 #include <macros.h>
 #include <apic/apic.h>
+#include <lib/std/printf.h>
 
 static cpu_t _cpus[MAX_NUM_CPUS] = {};
-static void cli(void);
-static void sti(void);
 
 cpu_t *
 cpu_create(uint32_t id) {
@@ -73,20 +73,27 @@ cpu_release_interrupts() {
     }
 }
 
-/* privates */
+void 
+cpu_being_interrupt() {
+    cpu_t *curr = cpu_get_current();
 
-static
-inline 
-ALWAYSINLINE
-void 
-cli(void) {
-    __asm__ ("cli");
+    if (!curr->retain_enabled) {
+        printf("[error] retain disabled when beginning an interrupt!\r\n");
+        hcf();
+    }
+
+    curr->retain_enabled = false;
 }
-static 
-inline 
-ALWAYSINLINE 
+
 void 
-sti(void) {
-    __asm__ ("sti");
+cpu_end_interrupt() {
+    cpu_t *curr = cpu_get_current();
+
+    if (curr->retain_enabled) {
+        printf("[error] retain enabled when ending an interrupt!\r\n");
+        hcf();
+    }
+
+    curr->retain_enabled = true;
 }
 

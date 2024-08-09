@@ -26,3 +26,6 @@ void cpu_retain_enable();
 void cpu_retain_interrupts();
 void cpu_release_interrupts();
 
+void cpu_being_interrupt(void);
+void cpu_end_interrupt(void);
+
