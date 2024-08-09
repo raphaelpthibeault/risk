@@ -10,6 +10,7 @@
 #include <mm/pmm/pmm.h>
 #include <cpu/cpu.h>
 #include <lib/asm/asm.h>
+#include <cpu/gdt/gdt.h>
 
 #define LIMINE_REQUEST __attribute__((used, section(".requests")))
 
@@ -111,19 +112,24 @@ limine_responses_checks(void) {
     }
 }
 
-framebuffer_info_t framebuffer;
+framebuffer_info_t _framebuffer;
 
 void 
 setup_framebuffer(void) {
     // assume the framebuffer model is RGB with 32-bit pixels.
     struct limine_framebuffer *fb_response = framebuffer_request.response->framebuffers[0];
-    framebuffer.frame_addr = (uint64_t)fb_response->address;
-    framebuffer.frame_bpp = fb_response->bpp;
-    framebuffer.frame_pitch = fb_response->pitch;
-    framebuffer.frame_width = fb_response->width;
-    framebuffer.frame_height = fb_response->height;
+    _framebuffer.frame_addr = (uint64_t)fb_response->address;
+    _framebuffer.frame_bpp = fb_response->bpp;
+    _framebuffer.frame_pitch = fb_response->pitch;
+    _framebuffer.frame_width = fb_response->width;
+    _framebuffer.frame_height = fb_response->height;
 }
 
+
+framebuffer_info_t *
+get_framebuffer(void) {
+    return &_framebuffer;
+}
 
 
 void 
@@ -166,28 +172,39 @@ _start(void) {
         printf("[error] earliest possible start location in a 4-level paging scheme is not 0xFFFF800000000000\r\n");
     }
 
+    /* setup steps:
+     * pre bsp:
+     *  - terminal 
+     *  - memory
+     *  - debugging
+     *  - acpi
+     *  - interrupt preparation
+     *
+     * setup bsp 
+     *
+     * post bsp:
+     *  - smp
+     *  - tasking
+     *
+     * */
+    setup_framebuffer();
+
     /* recall only the BSP runs this _start function */
     cpu_t *bsp = cpu_create(smp_request.response->bsp_lapic_id);
     printf("[info] BSP initialized\r\n");
     cpu_disable_interrupts();
     cpu_retain_disable();
 
-    /* general steps:
-     *  - gdt 
-     *  - idt 
-     *  - pmm 
-     *  - vmm
-     *  - acpi
-     *  ...
-     * */
+    gdt_assemble();
+    gdt_dump();
+    
+
 
     pmm_init(memmap_response);
-
 
     cpu_retain_enable();
     cpu_enable_interrupts();
 
-    setup_framebuffer();
 
     hcf();
 }

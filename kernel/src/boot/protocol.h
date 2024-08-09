@@ -36,8 +36,7 @@ typedef struct {
     uint32_t    frame_bpp;
 } framebuffer_info_t;
 
-//extern memory_map_t      *memory_map;
-extern framebuffer_info_t framebuffer;
+framebuffer_info_t *get_framebuffer(void);
 
 inline 
 char *

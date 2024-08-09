@@ -64,11 +64,10 @@ override KLDFLAGS += \
 
 override KNASMFLAGS += \
     -Wall \
-    -f elf64
+    -f elf64 
 
 override CFILES := $(shell cd src && find -L * -type f -name '*.c')
 override ASFILES := $(shell cd src && find -L * -type f -name '*.s')
-override NASMFILES := $(shell cd src && find -L * -type f -name '*.asm')
 override OBJ := $(addprefix obj/,$(CFILES:.c=.c.o) $(ASFILES:.s=.s.o) $(NASMFILES:.asm=.asm.o))
 override HEADER_DEPS := $(addprefix obj/,$(CFILES:.c=.c.d) $(ASFILES:.s=.s.d))
 
