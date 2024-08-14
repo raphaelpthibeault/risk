@@ -1,4 +1,2 @@
-ovmf/
-*.hdd
-*.iso
-limine/
+build/
+compile_commands.json

@@ -1,22 +1,5 @@
-$(BUILDDIR)/%.c.o: src/%.c
-	$(MKCWD)
-	$(CC) $(CFLAGS) -c -o $@ $^
+# for $(BUILDIR) object files and whatnot
+# buildir @ .c.o
+# buildir @ .s.o
 
-$(BUILDDIR)/%.s.o: src/%.s
-	$(MKCWD)
-	$(AS) $(ASFLAGS) $< -o $@
-
-$(BINDIR)/%.a: $(OBJ)
-	$(MKCWD)
-	$(LD) $(LDFLAGS) -r -o $@ $^
-
-$(BINDIR)/%: $(OBJ)
-	$(MKCWD)
-	$(LD) $(LDFLAGS) -o $@ $^
-
-$(BINDIR)/%.efi: $(OBJ)
-	$(MKCWD)
-	ld -shared -Bsymbolic -Ldeps/gnu-efi/x86_64/deps -Ldeps/gnu-efi/x86_64/gnuefi -Ldeps/gnu-efi/x86_64/lib -Tdeps/gnu-efi/gnuefi/elf_x86_64_efi.lds deps/gnu-efi/x86_64/gnuefi/crt0-efi-x86_64.o $^ -o $(BINDIR)/temp.so -lgnuefi -lefi
-	$(OBJCOPY) -j .text -j .sdata -j .data -j .dynamic -j .dynsym  -j .rel -j .rela -j .rel.* -j .rela.* -j .reloc --target efi-app-x86_64 --subsystem=10 $(BINDIR)/temp.so $@
-	@rm $(BINDIR)/temp.so
 

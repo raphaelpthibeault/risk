@@ -1,43 +1,50 @@
-MKCWD = mkdir -p $(@D)
+USE_FRAMEBUFFER ?= 1
+SMALL_PAGES ?= 0
 
-CC := gcc
-AS := nasm
-LD := ld
-OBJCOPY := objcopy
+# toolchain
+CC = clang-18
+LD = ld.lld
+AS = nasm
 
-CFLAGS := -O3 \
-	-std=gnu11 \
-	-Wall \
-	-Wextra \
-	-Werror \
-	-Wno-deprecated-pragma \
-	-Wno-unused-function \
-	-Wno-unused-variable \
-	-Wno-ignored-qualifiers \
-	-Wno-unused-parameter \
-	-Wno-unused-but-set-variable \
-	-Wno-implicit-fallthrough \
-	-Wno-deprecated-non-prototype \
-	-fno-stack-protector \
-	-ffreestanding -nostdlib \
-	-Iinclude/libc \
-	-Iinclude \
-	-I$(SRCDIR)
+PROJECT_FOLDER := src 
+BUILD_FOLDER := build
 
-CFLAGS_DISABLE_SIMD := -mno-mmx \
-    -mno-3dnow \
-	-mno-80387 -mno-sse \
-	-mno-sse2 -mno-sse3 \
-	-mno-ssse3 -mno-sse4
+TESTS_FOLDER := tests
+FONT_FOLDER := fonts
 
-ASFLAGS := -f elf64 \
-	-Iinclude/libc \
-	-Iinclude \
-	-I$(SRCDIR)
+DEFFLAGS := -D USE_FRAMEBUFFER=$(USE_FRAMEBUFFER)  -D SMALL_PAGES=$(SMALL_PAGES)
 
-LDFLAGS := -nostdlib
+CFLAGS := -std=c23 \
+        -ffreestanding \
+        -O0 \
+        -Wall \
+        -Wextra \
+        -mno-red-zone \
+        -mno-sse \
+        -mcmodel=large \
+        -fno-stack-protector \
+        -nostdlib \
+        -nostdinc \
+        -I include \
+        -I include/kernel \
+        -I include/libc \
+        -I include/boot \
+        -I src
 
-SRC = $(wildcard $(SRCDIR)/*.c) $(wildcard $(SRCDIR)/*.s) \
-	$(wildcard $(SRCDIR)/*/*.c) $(wildcard $(SRCDIR)/*/*.s)
-OBJ = $(patsubst src/%, $(BUILDDIR)/%.o, $(SRC))
+CFLAGS += $(DEFFLAGS)
+
+ASFLAGS := -F dwarf -g \
+    -Wall \
+    -f elf64 
+
+
+LDFLAGS := -m elf_x86_64 \
+    -nostdlib \
+    -pie \
+    -z text \
+    -z max-page-size=0x1000 \
+    -T src/linker.ld
+
+TEST_FLAGS := 
+
 
