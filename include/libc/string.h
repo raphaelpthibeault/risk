@@ -1,6 +1,6 @@
 #ifndef STRING_H
 #define STRING_H
-#include <yvals.h>
+#include <stddef.h>
 
 void *memchr(const void *, int, size_t);
 int   memcmp(const void *, const void *, size_t);
