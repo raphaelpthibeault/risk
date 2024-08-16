@@ -89,7 +89,7 @@ printf(const char *format, ...) {
 	va_list args;
 	va_start(args, format);
 
-	char buf[256];
+	char buf[512];
 	vsnprintf(buf, sizeof(buf), format, args);
 
 	serial_write_str(buf, SERIAL_COM1_PORT);
