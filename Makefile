@@ -65,5 +65,6 @@ $(BUILD_FOLDER)/%.psf.o: $(FONT_FOLDER)/%.psf
 	objcopy -O elf64-x86-64 -B i386 -I binary "$<" "$@"
 
 
-# gdb
+debug: build 
+	qemu-system-x86_64 -M q35 -m 2G -cdrom $(BUILD_FOLDER)/$(ISO_IMAGE_FILENAME) -boot d -smp 4 -serial mon:stdio -s -S
 

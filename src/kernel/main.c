@@ -3,16 +3,14 @@
 #include <stdio.h>
 #include <stdint.h>
 #include <graphics/psf.h>
-
-static void _init_system(uint64_t addr);
-
+#include <multiboot.h>
 
 extern uint8_t _psf_font_version;
 
 /* x86_64 multiboot2 C entry point. Called by the x86_64 longmode bootstrap in boot.s
  * */
 void 
-kernel_start(uint64_t addr, uint64_t magic) {
+kernel_start(multiboot_t *mboot, uint32_t mboot_mag, void *esp, uint64_t base) {
     serial_init_write();
 
     printf( "........      ...   ......   ..    ..\r\n"
@@ -26,25 +24,18 @@ kernel_start(uint64_t addr, uint64_t magic) {
             "..      ..  ...    ......    ..    ..\r\n");
     printf("\r\n\r\n");
 
-    if (magic != 0x36d76289) {
-        printf("[error] invalid magic\r\n");
-        while (1);
+    if (mboot_mag != 920085129) {
+        printf("[ERROR] incorrect mboot mag!\r\n");
     }
 
+    /* elf rela */
 
-    // gdt_assemble (which has reload inside)
-    // idt_assemble (which has reload inside)
-    // framebuffer
 
-    _init_system(addr);
+    // TODO: gdt_assemble (which has reload inside)
+    // TODO: idt_assemble (which has reload inside)
+    // TODO: framebuffer
+
 
 }
 
-
-static void 
-_init_system(uint64_t addr) {
-    printf("_init_system ( %llu )\r\n", addr);
-    // memory
-
-}
 

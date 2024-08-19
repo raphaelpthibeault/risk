@@ -1,11 +1,6 @@
 #ifndef KERNEL_MAIN_H
 #define KERNEL_MAIN_H
 
-#include <multiboot.h>
-#include <stdint.h>
-
-extern struct multiboot_tag *tag_start;
-
-void kernel_start(unsigned long addr, unsigned long magic);
+//void kernel_start(struct multiboot *mboot, uint32_t mboot_mag, void *esp, uint64_t base);
 
 #endif /* ifndef KERNEL_MAIN_H */

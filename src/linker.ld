@@ -1,40 +1,66 @@
 ENTRY(start)
 
 SECTIONS {
-    . = 1M; /* avoid conflict with real mode */
+    . = 1M;		/* skip a meg to avoid conflict with real mode */
+    phys = .;	/* physical start */
 
-    _kernel_start = .;
-    _kernel_virtual_offset = 0xffffffff80000000;
-
-    /* multiboot 2 */
-    .multiboot_header : {
-        *(.multiboot_header)
-    }
-
-    .multiboot.text : {
-        *(.multiboot.text)
-    }
-
-    . += _kernel_virtual_offset; /* jump to virtual memory */
-
-    /* add a symbol indicating start address of the kernel */ 
-	.text ALIGN (4K) : AT (ADDR (.text) - _kernel_virtual_offset) {
+    .text : ALIGN(4K)
+	{
+		*(.multiboot)
+		*(.bootstrap)
+		code = .;
 		*(.text)
-		*(.text.*)
-	}
-	.rodata ALIGN (4K) : AT (ADDR (.rodata) - _kernel_virtual_offset) {
-		*(.rodata)
-		*(.rodata.*)
-	}
-	.data ALIGN (4K) : AT (ADDR (.data) - _kernel_virtual_offset) {
-		*(.data)
-		*(.data.*)
-	}
-	.bss ALIGN (4K) : AT (ADDR (.bss) - _kernel_virtual_offset) {
-		*(.bss)
+		*(.smp_ap_bootstrap) /* for the future */
 	}
 
-    _kernel_end = .;
-    _kernel_physical_end = . - _kernel_virtual_offset;
+	.rodata : ALIGN(4K)
+	{
+		*(.rodata)
+	}
+	.rela.dyn : ALIGN(4K)
+	{
+		_rela_start = .;
+		*(.rela)
+		*(.rela.text)
+		*(.rela.got)
+		*(.rela.plt)
+		*(.rela.bss)
+		*(.rela.ifunc)
+		*(.rela.text.*)
+		*(.rela.data)
+		*(.rela.data.*)
+		*(.rela.rodata)
+		*(.rela.rodata*)
+		*(.rela.dyn)
+		_rela_end = .;
+	}
+
+	.data : ALIGN(4K)
+	{
+		data = .;
+		*(.data)
+		*(.symbols)
+		PROVIDE(kernel_symbols_start = .);
+		PROVIDE(kernel_symbols_end = .);
+	}
+
+	.bss : ALIGN(4K)
+	{
+		PROVIDE(bss_start = .);
+		bss = .;
+		*(COMMON)
+		*(.bss)
+		/**(.stack)*/
+	}
+
+	end = .;
+
+	/DISCARD/ :
+	{
+		*(.comment)
+		*(.eh_frame)
+		*(.note.gnu.build-id)
+	}
+
 }
 
