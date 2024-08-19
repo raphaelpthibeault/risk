@@ -45,7 +45,37 @@ typedef struct {
 	uint8_t  framebuffer_type;
 } PACKED multiboot_t;
 
+typedef struct {
+	uint32_t type;
+	uint32_t length;
+} multiboot2_tag_header_t;
 
+typedef struct {
+	multiboot2_tag_header_t head;
+	uint32_t entry_length;
+	uint32_t entry_version;
+	char entries[];
+} multiboot2_memmap_t;
 
+typedef struct {
+    uintptr_t highest_valid_address;
+    uintptr_t highest_kernel_address;
+} multiboot2_addresses_t;
+
+typedef struct {
+    uint64_t base;
+    uint64_t length;
+    uint32_t type;
+    uint32_t reserved;
+} multiboot2_memmap_entry_t;
+
+typedef struct {
+    multiboot2_tag_header_t head;
+	uint32_t module_start;
+	uint32_t module_end;
+	uint8_t cmdline[];
+} multiboot2_module_t;
+
+multiboot2_addresses_t multiboot2_init(multiboot_t *);
 
 #endif /* ifndef MULTIBOOT_H */

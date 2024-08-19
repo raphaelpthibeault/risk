@@ -26,7 +26,7 @@ kernel_start(multiboot_t *mboot, uint32_t mboot_mag, void *esp, uint64_t base) {
     printf("\r\n\r\n");
 
     if (mboot_mag != 920085129) {
-        printf("[ERROR] incorrect mboot mag!\r\n");
+        printf("[fatal] incorrect mboot mag\r\n");
         while (1); // halt; TODO: panic function
     }
 
@@ -40,11 +40,19 @@ kernel_start(multiboot_t *mboot, uint32_t mboot_mag, void *esp, uint64_t base) {
         }
     }
 
-    /* TODO: multiboot2 */
+    /* multiboot2 initialization */
+    multiboot2_addresses_t highest_addrs = multiboot2_init(mboot);
+    printf("[info] highest valid address: %llu\r\n", highest_addrs.highest_valid_address);
+    printf("[info] highest kernel address: %llu\r\n", highest_addrs.highest_kernel_address);
+
+
+
     /* TODO: initialize scheduler for bsp */
     /* TODO: initialize per-CPU kernel state for the bsp */
     // TODO: gdt_assemble (which has reload inside)
     // TODO: idt_assemble (which has reload inside)
     // TODO: framebuffer
 }
+
+
 
