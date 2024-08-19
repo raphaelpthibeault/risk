@@ -25,9 +25,12 @@
 #define MMU_PTR_NULL  1
 #define MMU_PTR_WRITE 2
 
+void mmu_init(uint64_t memsize, uintptr_t first_free_page);
+
 /* frame management */
 
 /* mapping */
+void *mmu_map_from_physical(uintptr_t frame_addr);
 
 /* paging */
 

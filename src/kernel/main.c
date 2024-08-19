@@ -1,3 +1,4 @@
+#include "memory/mmu.h"
 #include <main.h>
 #include <io/uart/uart.h>
 #include <stdio.h>
@@ -7,6 +8,8 @@
 #include <elf.h>
 
 extern uint8_t _psf_font_version;
+
+multiboot_t *multiboot_struct = NULL;
 
 /* x86_64 multiboot2 C entry point. Called by the x86_64 longmode bootstrap in boot.s
  * */
@@ -45,7 +48,8 @@ kernel_start(multiboot_t *mboot, uint32_t mboot_mag, void *esp, uint64_t base) {
     printf("[info] highest valid address: %llu\r\n", highest_addrs.highest_valid_address);
     printf("[info] highest kernel address: %llu\r\n", highest_addrs.highest_kernel_address);
 
-
+    /* mboot but higher mapped */
+    multiboot_struct = mmu_map_from_physical((uintptr_t)mboot);
 
     /* TODO: initialize scheduler for bsp */
     /* TODO: initialize per-CPU kernel state for the bsp */
