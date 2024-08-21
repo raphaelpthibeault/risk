@@ -30,8 +30,7 @@ To run in debug mode:
 ```bash
 make debug
 ```
-which will add the `-s -S` flags to the run command and open a remote target for gdb at `localhost:1234`. After running the command, with another shell launch gdb and use 
-`target remote localhost:1234` to debug the qemu instance.
+which will add the `-s -S` flags to the run command and open a remote target for gdb at `localhost:1234`. After running the command, with another shell launch `gdb build/kernel.bin` and use `target remote localhost:1234` to debug the qemu instance.
 
 ## Features
 TODO
