@@ -24,6 +24,9 @@ build: $(BIN_FILE) grub.cfg
 run: build
 	qemu-system-i386 -cdrom $(ISO_FILE) -monitor stdio
 
+compile_commands:
+	bear -- make build
+
 # debug
 
 clean:
