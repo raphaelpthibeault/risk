@@ -1,9 +1,2 @@
-build/
-compile_commands.json
+boot
 .cache/
-.clangd
-
-*.iso
-*.bin
-*.o
-isodir/

@@ -29,18 +29,18 @@ mov dx, 0x7E00
 ; actually load the sectors
 call load_bios
 
-; should be able to read the loaded string
-mov bx, loaded_msg
-call print_bios
-
+; elevate CPU to 32-bit PM
+call elevate_bios
 
 bootsector_hold:
 jmp $ ; infinite loop
 
-; UTIL FUNCTION AREA
-%include "print.asm"
-%include "print_hex.asm"
-%include "load.asm"
+; INCLUDE real-mode functions
+%include "real/print.asm"
+%include "real/print_hex.asm"
+%include "real/load.asm"
+%include "real/gdt.asm"
+%include "real/elevate.asm"
 
 ; DATA STORAGE AREA
 msg_hello_world:                db `\r\nHello World, from the BIOS!\r\n`, 0
@@ -51,11 +51,32 @@ times 510 - ($ - $$) db 0x00
 ; magic number
 dw 0xAA55
 
-bootsector_extended:
 
-loaded_msg:                     db `\r\nNow reading from the next sector!`, 0
+; BEGIN 32-BIT PROTECTED MODE
+
+bootsector_extended:
+begin_protected_mode:
+
+; clear VGA memory output
+call clear_protected
+
+; test VGA-style print
+mov esi, protected_alert
+call print_protected
+
+jmp $ ; infinite loop
+
+; INCLUDE protected-mode functions
+%include "protected/clear.asm"
+%include "protected/print.asm"
+
+; DATA STORAGE AREA
+vga_start:                      equ 0x000B8000
+vga_size:                       equ 80*25*2     ; VGA memory is 80 chars wide, 25 chars high. 1 char := 2 bytes
+style_wb:                       equ 0x0F
+
+protected_alert:                db `Now in 32-bit protected mode`, 0
+
 ; pad sector
 times 512 - ($ - bootsector_extended) db 0x00
-
-bu:
 
