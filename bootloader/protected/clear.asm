@@ -2,7 +2,7 @@
 
 ; clear VGA memory i.e. writes blank spaces to every character slot
 clear_protected:
-    ; pusha/popa command pushes and pop all registers
+    ; pusha/popa command pushes and pop all general-purpose registers
     pusha
     ; set up constrains
     mov ebx, vga_size

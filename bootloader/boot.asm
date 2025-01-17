@@ -60,6 +60,10 @@ begin_protected_mode:
 ; clear VGA memory output
 call clear_protected
 
+; setting up long mode
+call detect_lm_protected
+call init_page_tables_protected
+
 ; test VGA-style print
 mov esi, protected_alert
 call print_protected
@@ -69,6 +73,8 @@ jmp $ ; infinite loop
 ; INCLUDE protected-mode functions
 %include "protected/clear.asm"
 %include "protected/print.asm"
+%include "protected/detect_lm.asm"
+%include "protected/init_paging.asm"
 
 ; DATA STORAGE AREA
 vga_start:                      equ 0x000B8000
@@ -79,4 +85,9 @@ protected_alert:                db `Now in 32-bit protected mode`, 0
 
 ; pad sector
 times 512 - ($ - bootsector_extended) db 0x00
+long_mode_init:
+
+
+; pad sector
+times 512 - ($ - long_mode_init) db 0x00
 
