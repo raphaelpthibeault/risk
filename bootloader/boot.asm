@@ -20,19 +20,19 @@ call print_bios
 ; so we load sector #2
 mov bx, 0x002
 
-; load only 1 sector for now
-mov cx, 0x001
+; load 2 sectors to load entire bootloader
+; TODO dynamic number of sectors
+mov cx, 0x002
 
-; want to store the new sector immediately after the first loaded sector
+; want to store the new sectors immediately after the first loaded sector
 mov dx, 0x7E00
 
-; actually load the sectors
+; actually load the new sectors
 call load_bios
 
 ; elevate CPU to 32-bit PM
 call elevate_bios
 
-bootsector_hold:
 jmp $ ; infinite loop
 
 ; INCLUDE real-mode functions
@@ -43,8 +43,8 @@ jmp $ ; infinite loop
 %include "real/elevate.asm"
 
 ; DATA STORAGE AREA
-msg_hello_world:                db `\r\nHello World, from the BIOS!\r\n`, 0
-boot_drive:                     db 0x00
+boot_drive:         db 0x00
+msg_hello_world:    db `\r\nHello World, from the BIOS!\r\n`, 0
 
 ; pad boot sector for magic number
 times 510 - ($ - $$) db 0x00
@@ -54,19 +54,20 @@ dw 0xAA55
 
 ; BEGIN 32-BIT PROTECTED MODE
 
-bootsector_extended:
 begin_protected_mode:
+[bits 32]
 
-; clear VGA memory output
 call clear_protected
 
 ; setting up long mode
 call detect_lm_protected
-call init_page_tables_protected
 
-; test VGA-style print
 mov esi, protected_alert
 call print_protected
+
+call init_page_tables_protected
+
+call elevate_protected
 
 jmp $ ; infinite loop
 
@@ -75,19 +76,37 @@ jmp $ ; infinite loop
 %include "protected/print.asm"
 %include "protected/detect_lm.asm"
 %include "protected/init_paging.asm"
+%include "protected/gdt.asm"
+%include "protected/elevate.asm"
 
 ; DATA STORAGE AREA
-vga_start:                      equ 0x000B8000
-vga_size:                       equ 80*25*2     ; VGA memory is 80 chars wide, 25 chars high. 1 char := 2 bytes
-style_wb:                       equ 0x0F
-
-protected_alert:                db `Now in 32-bit protected mode`, 0
-
-; pad sector
-times 512 - ($ - bootsector_extended) db 0x00
-long_mode_init:
-
+vga_start:          equ 0x000B8000
+vga_size:           equ 80*25*2     ; VGA memory is 80 chars wide, 25 chars high. 1 char := 2 bytes
+style_wb:           equ 0x0F
+protected_alert:    db `64-bit long mode supported`, 0
+; kernel_start:   equ 0x00100000  ; kernel is physically at 1 MB
 
 ; pad sector
-times 512 - ($ - long_mode_init) db 0x00
+times 512 - ($ - begin_protected_mode) db 0x00
+
+begin_long_mode:
+[bits 64]
+
+mov rdi, style_blue
+call clear_long
+
+mov rdi, style_blue
+mov rsi, long_mode_note
+call print_long
+
+jmp $ ; infinite loop
+
+%include "long/clear.asm"
+%include "long/print.asm"
+
+long_mode_note:     db `Now running in fully-enabled, 64-bit long mode!`, 0
+style_blue:         equ 0x1F
+
+; pad sector
+times 512 - ($ - begin_long_mode) db 0x00
 
