@@ -1,0 +1,19 @@
+[
+  {
+    "arguments": [
+      "/usr/bin/clang-18",
+      "-ggdb",
+      "-c",
+      "-ffreestanding",
+      "-target",
+      "x86_64-none-elf",
+      "-Iinc/",
+      "-o",
+      "src/kernel.o",
+      "src/kernel.c"
+    ],
+    "directory": "/home/rpthibeault/Documents/risk/kernel",
+    "file": "/home/rpthibeault/Documents/risk/kernel/src/kernel.c",
+    "output": "/home/rpthibeault/Documents/risk/kernel/src/kernel.o"
+  }
+]

@@ -1,8 +1,2 @@
-boot
 .cache/
-
 os.img
-kernel
-kernel.elf
-**/*.o
-
