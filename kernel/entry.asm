@@ -1,7 +1,7 @@
 [bits 64]
 [extern main]
 
-section .text
+section .startup
 global _start
 _start:
     call main

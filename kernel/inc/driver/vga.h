@@ -1,5 +1,5 @@
-#ifndef DRIVER_VGA
-#define DRIVER_VGA
+#ifndef __DRIVER_VGA
+#define __DRIVER_VGA
 
 #include <types.h>
 
@@ -28,10 +28,10 @@
 #define COLOR_YEL 14    /* Yellow */
 #define COLOR_WHT 15    /* White */
 
-typedef struct __attribute__((packed)) {
+typedef struct {
     char c;
     char style;
-} vga_char;
+} __attribute__((packed)) vga_char_t;
 
 /* get char to use as style char */
 uint8_t vga_color(const uint8_t fg, const uint8_t bg);
@@ -57,4 +57,4 @@ void set_cursor_pos(uint8_t x, uint8_t y);
 /* scroll line i.e move cursor down and place leftmost */
 void scroll_line();
 
-#endif /* ifndef DRIVER_VGA */
+#endif /* ifndef __DRIVER_VGA */

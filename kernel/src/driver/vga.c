@@ -2,7 +2,7 @@
 #include <cpu/ports.h>
 #include <types.h>
 
-volatile vga_char *TEXT_AREA = (vga_char*) VGA_START;
+volatile vga_char_t *TEXT_AREA = (vga_char_t*) VGA_START;
 
 
 uint8_t vga_color(const uint8_t fg, const uint8_t bg) {
@@ -14,7 +14,7 @@ void clearwin(const uint8_t fg, const uint8_t bg) {
     const char space = ' ';
     uint8_t clear_color = vga_color(fg, bg);
 
-    vga_char clear_char = {
+    vga_char_t clear_char = {
         .c = space,
         .style = clear_color
     };
@@ -50,7 +50,7 @@ void putchar(const char c, const uint8_t fg, const uint8_t bg) {
     } else {
         uint8_t style = vga_color(fg, bg);
 
-        vga_char tmp = {
+        vga_char_t tmp = {
             .c = c,
             .style = style
         };
@@ -156,8 +156,8 @@ void scroll_line() {
     for (j = 0; j < VGA_WIDTH; ++j) {
         uint16_t pos = j + (i * VGA_WIDTH);
 
-        vga_char curr = TEXT_AREA[pos];
-        vga_char clear = {
+        vga_char_t curr = TEXT_AREA[pos];
+        vga_char_t clear = {
             .c = ' ',
             .style = curr.style
         };

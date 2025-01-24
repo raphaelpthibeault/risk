@@ -1,19 +1,16 @@
-#include <driver/vga.h>
 #include <types.h>
+#include <driver/vga.h>
+#include <cpu/isr.h>
 
 int main() {
+    isr_install(); 
+
     set_cursor_pos(0, 0);
-    clearwin(COLOR_WHT, COLOR_BLU);
+    clearwin(COLOR_WHT, COLOR_BLK);
 
-    const char *foo = "\n\n\nfoo. The foo message as text to test the newline character.";
-    putstr(foo, COLOR_WHT, COLOR_BLU);
-
-    const char *bar = "\n\tbar. Bar should be tabbed";
-    putstr(bar, COLOR_WHT, COLOR_BLU);
-
-    const char *spam = "\nThis should scroll.";
-    for (uint16_t i = 0; i < 21; ++i)
-        putstr(spam, COLOR_WHT, COLOR_BLU);
+    putstr("\nThis interrupt is most likely NOT a double-fault,\n", COLOR_GRN, COLOR_BLK);
+    putstr("but a problem with not remapping the timer IRQ from the PIC,\n", COLOR_GRN, COLOR_BLK);
+    putstr("so it shows up on gate 8\n", COLOR_GRN, COLOR_BLK);
 
     return 0;
 }

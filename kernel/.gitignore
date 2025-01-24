@@ -1,4 +1,4 @@
 kernel
 kernel.elf
-
+compile_commands.json
 **/*.o

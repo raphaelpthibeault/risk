@@ -1,5 +1,5 @@
-#ifndef TYPES
-#define TYPES
+#ifndef __TYPES
+#define __TYPES
 
 typedef signed char int8_t;
 typedef unsigned char uint8_t;
@@ -13,4 +13,4 @@ typedef unsigned int uint32_t;
 typedef signed long int64_t;
 typedef unsigned long uint64_t;
 
-#endif /* ifndef TYPES */
+#endif /* ifndef __TYPES */
