@@ -84,8 +84,7 @@ void isr_install(){
 
 __attribute__((sysv_abi))
 void isr_handler(uint64_t isr_num, uint64_t error_code, registers_t *regs) {
-   const char *msg = exception_messages[isr_num];
-   putstr(msg, COLOR_WHT, COLOR_RED);
-   
+    const char *msg = exception_messages[isr_num];
+    putstr(msg, COLOR_WHT, COLOR_RED);
 }
 
