@@ -1,5 +1,5 @@
 #include <cpu/idt.h>
-#include <stdint.h>
+#include <types.h>
 
 idt_gate_t main_idt[IDT_ENTRIES];
 idtr_t main_idt_reg;
@@ -13,11 +13,11 @@ void set_idt() {
 
 }
 
-void set_idt_gate(uint8_t gate_num, uint64_t isr_addr) {
+void set_idt_gate(uint8_t gate_num, uintptr_t isr_addr, uint8_t ist) {
    idt_gate_t gate = {
       .isr_low = (uint16_t) (isr_addr & 0xFFFF),
       .cs_selector = KERNEL_CS,
-      .ist = 0,
+      .ist = ist,
       .attributes = INT_ATTR,
       .isr_mid = (uint16_t) ((isr_addr >> 16) & 0xFFFF),
       .isr_hi = (uint32_t) ((isr_addr >> 32) & 0xFFFFFFFF),

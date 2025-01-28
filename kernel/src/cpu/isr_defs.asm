@@ -1,7 +1,5 @@
 [bits 64]
 
-[extern isr_handler]
-
 ; size of the general-purpose registers needed for getting the syscall number
 REGISTER_SIZE: equ 0x78
 QUADWORD_SIZE: equ 0x08
@@ -43,7 +41,6 @@ QUADWORD_SIZE: equ 0x08
 %endmacro
 
 %macro SAVE_REGS_AND_CALL_HANDLER 1
-    ; save all registers since calling context is unknown
     PUSHALL
 
     ; Configure arguments for the method call (Using SYSV ABI)
@@ -60,42 +57,36 @@ QUADWORD_SIZE: equ 0x08
     POPALL
 %endmacro
 
-
 %macro ISR_NOERRCODE 1
-  global isr_%1
   isr_%1:
-    cli
 
-    push qword 0
+    push qword 0 ; no error
     push qword %1
 
-    SAVE_REGS_AND_CALL_HANDLER isr_handler
-
-    ; Pop the stack by 2 quadwords for the ISR Number and Error Code
-    add rsp, 0x10
-
-    sti
-
-    iretq
+    jmp isr_common
 %endmacro
 
 %macro ISR_ERRCODE 1
-  global isr_%1
   isr_%1:
-    cli
 
     push qword %1
 
-    SAVE_REGS_AND_CALL_HANDLER isr_handler
-
-    ; Pop the stack by 2 quadwords for the ISR Number and Error Code
-    add rsp, 0x10
-
-    sti
-
-    iretq
+    jmp isr_common
 %endmacro
 
+%macro ISR_NAME 1
+  dq isr_%1
+%endmacro
+
+section .text
+; jump to interrupt common
+[extern isr_handler]
+
+isr_common:
+    SAVE_REGS_AND_CALL_HANDLER isr_handler
+    add rsp, 0x10 ; pop the stack by 2 quadwords for the ISR Number and Error Code
+    iretq
+  
 ISR_NOERRCODE 0
 ISR_NOERRCODE 1
 ISR_NOERRCODE 2
@@ -104,15 +95,8 @@ ISR_NOERRCODE 4
 ISR_NOERRCODE 5
 ISR_NOERRCODE 6
 ISR_NOERRCODE 7
-
-; WARNING
-; ISR 8 is a special case. Usually this would be a double fault handler
-; and would require an error code. However, I have not remapped the PIC yet
-; so it tends to field an interrupt request from the PIC which doesn't 
-; push an error code onto the stack. For now,
 ; I'm using the NOERRCODE macro to avoid a page fault when returning from this interrupt.
 ISR_NOERRCODE 8
-
 ISR_NOERRCODE 9
 ISR_ERRCODE   10
 ISR_ERRCODE   11
@@ -121,7 +105,7 @@ ISR_ERRCODE   13
 ISR_ERRCODE   14
 ISR_NOERRCODE 15
 ISR_NOERRCODE 16
-ISR_NOERRCODE 17
+ISR_ERRCODE   17
 ISR_NOERRCODE 18
 ISR_NOERRCODE 19
 ISR_NOERRCODE 20
@@ -134,6 +118,23 @@ ISR_NOERRCODE 26
 ISR_NOERRCODE 27
 ISR_NOERRCODE 28
 ISR_NOERRCODE 29
-ISR_NOERRCODE 30
+ISR_ERRCODE 30
 ISR_NOERRCODE 31
+
+; loop from 32 to 255 for user-defined interrupts/ISRs
+%assign i 32
+%rep 224
+  ISR_NOERRCODE i
+%assign i i+1
+%endrep
+
+; place all the ISRs in an array
+section .data
+global isr_vector
+isr_vector:
+%assign i 0
+%rep 256
+  ISR_NAME i 
+%assign i i+1
+%endrep
 

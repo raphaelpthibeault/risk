@@ -32,6 +32,6 @@ extern idt_gate_t main_idt[IDT_ENTRIES];
 extern idtr_t main_idt_reg;
 
 void set_idt();
-void set_idt_gate(uint8_t vector, uint64_t isr_addr);
+void set_idt_gate(uint8_t vector, uintptr_t isr_addr, uint8_t ist);
 
 #endif /* ifndef __CPU_IDT */
