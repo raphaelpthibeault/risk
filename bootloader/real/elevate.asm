@@ -27,8 +27,7 @@ elevate_bios:
     mov ss, ax
 
     ; make a new stack
-    mov ebp, 0x90000
-    mov esp, ebp
+    mov esp, 0x90000
 
     ; go to second sector now with 32-bit code
     jmp begin_protected_mode

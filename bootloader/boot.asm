@@ -13,8 +13,9 @@ begin_real:
 
 
 ; initialize base pointer and stack pointer
-mov bp, 0x0500
-mov sp, bp
+xor ax, ax
+mov ss, ax
+mov sp, 0x0500
 
 ; save ID of boot drive which BIOS stores in dl
 mov byte[boot_drive], dl
